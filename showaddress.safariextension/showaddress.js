@@ -13,7 +13,7 @@
         createEl = document.createElement.bind(document),
         createTxt = document.createTextNode.bind(document),
         getTagEl = document.getElementsByTagName.bind(document),
-        styleTxt = 'position:fixed; display: inline-block; bottom: 0; left: 0; height: 16px; line-height: 16px; padding: 0 5px 0 0;border: 1px solid #ccc; border-radius: 0 2px 0 0; font: 12px "Lucida Grande","Lucida Sans Unicode",Helvetica,Arial,Verdana,sans-serif; color: #666; background-color: #f3f2f2;',
+        styleTxt = 'position:fixed; display: inline-block; bottom: 0; left: 0; z-index: 10000;height: 16px; line-height: 16px; padding: 0 5px 0 0;border: 1px solid #ccc; border-radius: 0 2px 0 0; font: 12px "Lucida Grande","Lucida Sans Unicode",Helvetica,Arial,Verdana,sans-serif; color: #666; background-color: #f3f2f2;',
         options = {
             timer : 300,
             txt : '此节点由safari插件自动生成'
@@ -76,6 +76,7 @@
         instance = new Constructor(options)._init();
         links = getTagEl('a');
 
+        // TODO: 事件全局代理，解决动态加载内容中失效问题
         for(var i = 0, l = links.length; i < l; i++) {
             buffer = links[i];
 
