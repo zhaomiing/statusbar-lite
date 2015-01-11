@@ -7,9 +7,9 @@
 	<key>Builder Version</key>
 	<string>10600.3.14</string>
 	<key>CFBundleDisplayName</key>
-	<string>showaddress</string>
+	<string>statusbar-lite</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.zhaomiing.showaddress</string>
+	<string>com.zhaomiing.statusbarlite</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleShortVersionString</key>
