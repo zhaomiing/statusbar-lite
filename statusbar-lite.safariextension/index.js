@@ -9,13 +9,13 @@
 'use strict';
 
 (function (win, udf) {
-    var datakey = 'showaddressz',
+    var datakey = 'safaristatusbarlite',
         createEl = document.createElement.bind(document),
         createTxt = document.createTextNode.bind(document),
         getTagEl = document.getElementsByTagName.bind(document),
         getClassEl = document.getElementsByClassName.bind(document),
         getIdEl = document.getElementById.bind(document),
-        styleTxt = 'position:fixed; display: inline-block; bottom: 0; left: 0; z-index: 10000;max-width: 75%; overflow: hidden; height: 16px; line-height: 16px; padding: 0 5px 0 0;border: 1px solid #ccc; border-radius: 0 2px 0 0; white-space:nowrap;font: 12px "Lucida Grande","Lucida Sans Unicode",Helvetica,Arial,Verdana,sans-serif; color: #666; background-color: #f3f2f2;',
+        styleTxt = 'position:fixed; display: inline-block; bottom: 0; left: 0; /*opacity: 0;*/z-index: 10000;max-width: 75%; overflow: hidden; height: 16px; line-height: 16px; padding: 0 5px 0 0;border: 1px solid #ccc; border-radius: 0 2px 0 0; white-space:nowrap;font: 12px "Lucida Grande","Lucida Sans Unicode",Helvetica,Arial,Verdana,sans-serif; color: #666; background-color: #f3f2f2;',
         options = {
             timer : 300,
             txt : '此节点由safari插件自动生成'
@@ -49,20 +49,27 @@
 
         show : function () {
             var klass = this.barEl.className,
-                reg = /\sf\-dn/ig;
+                reg = /\sf\-dn/ig,
+                el = this.barEl;
 
+            
             if( hasClass(this.barEl, 'f-dn') ){
                 this.barEl.className = klass.replace(reg, '');
+                // this.opacityAnimate(el, 100, 75);
             }
         },
 
         hide : function () {
-            var klass = this.barEl.className;
+            var that = this,
+                klass = this.barEl.className,
+                el = this.barEl;
 
-            if(klass.indexOf('f-dn') === -1){
-                this.barEl.className += ' f-dn';
-                this.setTxt(this.options.txt);
-            }
+            // this.opacityAnimate(el, 0, 75, function () {
+                if(klass.indexOf('f-dn') === -1){
+                    that.barEl.className += ' f-dn';
+                    that.setTxt(that.options.txt);
+                }
+            // });
         },
 
         setTxt : function (str) {
@@ -70,10 +77,52 @@
 
             el.innerHTML = str;
             return this;
-        }
+        },
+
+        /**
+         * 透明度渐变
+         * @param {object} el 元素 dom
+         * @param {number} num 目标透明度 0 — 100
+         * @param {number} time 动画时间长度 单位ms
+         * @param {function} fn 完成动画回调
+         * @version 1.0
+         * 2015-01-11
+         */
+        /*opacityAnimate : function (el, num, time, fn) {
+            var computedStyle = win.getComputedStyle(el, null),
+                orOpacity = +computedStyle.opacity * 100,
+                curOPacity, tid, _checkDone, ts;
+
+            if(getType(num) !== 'number' || getType(time) !== 'number') return;
+            if(orOpacity === num) return;
+            if(num > 100) num = 100;
+            if(num < 0) num = 0;
+
+            el.style.opacity = Math.floor(orOpacity) / 100;
+            // 事件片长度
+            ts = Math.abs(time / (orOpacity - num));
+
+            _checkDone = function () {
+                curOPacity = el.style.opacity * 100;
+
+                if(Math.floor(curOPacity) !== num){
+                    curOPacity = (num > orOpacity) ? (curOPacity + 1) : (curOPacity - 1);
+                    el.style.opacity = parseInt(curOPacity) / 100;
+
+                    tid = setTimeout(_checkDone, ts);
+                }
+                else{
+                    clearTimeout(tid);
+                    fn && fn.call(win);
+                }
+
+            }
+
+            _checkDone();
+        }*/
     };
 
-    if(window.top === window) {
+    if(win.top === win) {
         instance = new Constructor(options)._init();
 
         evProxy('body', 'a', 'mouseover', function () {
@@ -87,11 +136,14 @@
             }
             // 由 a 的 childNode 触发，href 需要网上回溯到a
             else{
-                aNode = window.getClosestEl(that, 'a');
+                aNode = win.getClosestEl(that, 'a');
                 href = aNode.href;
             }
 
-            instance.setTxt(decodeURI(href)).show(); 
+            // 考虑没有href属性的情况
+            if(!/^\s*$/ig.test(href)){
+                instance.setTxt(decodeURI(href)).show(); 
+            }
         });
 
         evProxy('body', 'a', 'mouseout', function () {
@@ -202,7 +254,7 @@
             return ret;
         }
 
-        window.getClosestEl = getClosestEl;
+        win.getClosestEl = getClosestEl;
 
         /**
          * mouseover 到原素childNode 上时不触发 mouseout 回调

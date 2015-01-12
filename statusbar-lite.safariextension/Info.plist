@@ -9,11 +9,11 @@
 	<key>CFBundleDisplayName</key>
 	<string>statusbar-lite</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.zhaomiing.statusbarlite</string>
+	<string>com.zhaomiing.statusbar-lite</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.0</string>
+	<string>1.1</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
 	<key>Chrome</key>
@@ -24,7 +24,7 @@
 		<dict>
 			<key>End</key>
 			<array>
-				<string>showaddress.js</string>
+				<string>index.js</string>
 			</array>
 		</dict>
 		<key>Stylesheets</key>
