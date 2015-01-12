@@ -15,7 +15,7 @@
         getTagEl = document.getElementsByTagName.bind(document),
         getClassEl = document.getElementsByClassName.bind(document),
         getIdEl = document.getElementById.bind(document),
-        styleTxt = 'position:fixed; display: inline-block; bottom: 0; left: 0; z-index: 10000;height: 16px; line-height: 16px; padding: 0 5px 0 0;border: 1px solid #ccc; border-radius: 0 2px 0 0; font: 12px "Lucida Grande","Lucida Sans Unicode",Helvetica,Arial,Verdana,sans-serif; color: #666; background-color: #f3f2f2;',
+        styleTxt = 'position:fixed; display: inline-block; bottom: 0; left: 0; z-index: 10000;max-width: 75%; overflow: hidden; height: 16px; line-height: 16px; padding: 0 5px 0 0;border: 1px solid #ccc; border-radius: 0 2px 0 0; white-space:nowrap;font: 12px "Lucida Grande","Lucida Sans Unicode",Helvetica,Arial,Verdana,sans-serif; color: #666; background-color: #f3f2f2;',
         options = {
             timer : 300,
             txt : '此节点由safari插件自动生成'
@@ -36,6 +36,7 @@
             styleEl.setAttribute('type', 'text/css');
             styleEl.appendChild(cssTxt);
             styleEl.appendChild(createTxt('.f-dn{display:none;}'));
+            // styleEl.appendChild(createTxt('a *{pointer-events: none;}'));
             document.head.appendChild(styleEl);
 
             bar.setAttribute('class', datakey + ' f-dn');
@@ -73,25 +74,24 @@
     };
 
     if(window.top === window) {
-        var buffer;
-
         instance = new Constructor(options)._init();
-        /*links = getTagEl('a');
 
-        // TODO: 事件全局代理，解决动态加载内容中失效问题
-        for(var i = 0, l = links.length; i < l; i++) {
-            buffer = links[i];
-
-            buffer.addEventListener('mouseenter', function () {
-                instance.setTxt(decodeURI(this.href)).show();
-            });
-
-            buffer.addEventListener('mouseleave', function () {
-                instance.hide();
-            });
-        }*/
         evProxy('body', 'a', 'mouseover', function () {
-            instance.setTxt(decodeURI(this.href)).show();
+            var that = this,
+                tagName = that.tagName.toLowerCase(),
+                href, aNode;
+
+            // 由 a 本身触发
+            if(tagName === 'a'){
+                href = that.href;
+            }
+            // 由 a 的 childNode 触发，href 需要网上回溯到a
+            else{
+                aNode = window.getClosestEl(that, 'a');
+                href = aNode.href;
+            }
+
+            instance.setTxt(decodeURI(href)).show(); 
         });
 
         evProxy('body', 'a', 'mouseout', function () {
@@ -110,7 +110,7 @@
      * 2015-01-11
      */
     function evProxy (superNode, originNode, type, fn, data) {
-        var sp, or, spn, spt, orn, ort, checkFn;
+        var sp, or, spn, spt, orn, ort, _checkFn, _fixMouseOut;
 
         sp = _detectType(superNode);
         or = _detectType(originNode);
@@ -120,29 +120,147 @@
 
         spn = sp['dom'], spt = sp['type'], orn = or['dom'], ort = or['type'];
 
-        checkFn = function (e) {
+        _checkFn = function (e) {
             e.preventDefault();
 
             var tar = e.target;
 
             if(ort === 'class') {
                 if( tar.hasClass( originNode.substring(1) ) ){
-                    fn.call(tar, data);
+                    _fixMouseOut(e, fn);
                 }
             }
             else if(ort === 'id') {
                 if( tar.id === originNode.substring(1) ) {
-                    fn.call(tar, data);
+                    _fixMouseOut(e, fn);
                 }
             }
             else if(ort === 'tag') {
-                if( tar.tagName.toLowerCase() === originNode ) {
-                    fn.call(tar, data);
+                // type == 'mouseover' && console.log(tar.tagName.toLowerCase());
+                if( tar.tagName.toLowerCase() === originNode || isDescendantOfTag(tar, 'a') ) {
+                    _fixMouseOut(e, fn);
                 }
             }
         };
 
-        spn.addEventListener(type, checkFn, false);
+        /**
+         * 某元素的上级有没有某个标签
+         * @param {object} son dom
+         * @param {string} tagStr 标签名
+         * @return {boolean}
+         * @version 1.0
+         * 2015-01-11
+         */
+        function isDescendantOfTag(son, tagStr){
+            var ret = false;
+
+            if(son.tagName.toLowerCase() === tagStr) {
+                ret = true;
+            }
+            else{
+                while(son.parentNode && son.parentNode !== window) {
+                    // TODO: why try
+                    try{
+                        if(son.parentNode.tagName.toLowerCase() === tagStr) {
+                            ret = true;
+                            break;
+                        }
+                    }catch(err){}
+                
+                    son = son.parentNode;
+                }
+            }
+
+            return ret;
+        }
+
+        /**
+         * jquery.fn.closest ployfill
+         * @param {object} son dom
+         * @param {string} parentTag 上级节点标签名
+         * @return {object} ret dom
+         * @version 1.0
+         * 2015-01-11
+         */
+        function getClosestEl (son, parentTag) {
+            var ret;
+            
+            if(son.tagName.toLowerCase() === parentTag) {
+                ret = son;
+            }
+            else{
+                while(son.parentNode && son.parentNode !== window) {
+                    if(son.parentNode.tagName.toLowerCase() === parentTag) {
+                        ret = son.parentNode;
+                        break;
+                    }
+                
+                    son = son.parentNode;
+                }
+            }
+
+            return ret;
+        }
+
+        window.getClosestEl = getClosestEl;
+
+        /**
+         * mouseover 到原素childNode 上时不触发 mouseout 回调
+         * @param {object} evnet
+         * @param {function} fn 原始回调
+         * @version 1.0
+         * 2015-01-11
+         */
+        _fixMouseOut = function (event, fn) {
+            var tar = event.target,
+                reTar;
+
+            if(event.type === 'mouseout') {
+                reTar = event.relatedTarget || event.toElement;
+                
+                // reTar 只要不是 tar 的childNode 就触发
+                // reTar 是否是 a 或者 a 的 childNode
+                if ( !isDescendantOrSelf(reTar, tar) ) {
+                    fn.call(tar, data);
+                }
+            }
+            else{
+                fn.call(tar, data);
+            }
+        }
+
+        /**
+         * son 是否是 father 的下级节点 或者 son本身
+         * @param {object} son dom
+         * @param {object} father dom
+         * @return {boolean}
+         * @version 1.0
+         * 2015-01-11
+         */
+        function isDescendantOrSelf(son, father) {
+            var ret = false;
+
+            /*console.log('mouseout进入: ',son);
+            console.log('mouseout离开: ',father);
+            console.log('----------');*/
+            if(son === father) {
+                ret = true;
+            }
+            else{
+                while(son.parentNode && son.parentNode !== window) {
+                    if(son.parentNode === father) {
+                        ret = true;
+                        break;
+                    }
+                
+                    son = son.parentNode;
+                }
+            }
+
+            return ret;
+        }
+
+        spn.addEventListener(type, _checkFn, false);
     }
 
     /**
