@@ -48,6 +48,8 @@
 			<string>All</string>
 		</dict>
 	</dict>
+	<key>Update Manifest URL</key>
+	<string>https://dl.dropboxusercontent.com/u/77447495/statusbar-lite/manifest.plist</string>
 	<key>Website</key>
 	<string>http://www.prototypo.me</string>
 </dict>
