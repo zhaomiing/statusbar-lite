@@ -78,60 +78,61 @@
         },
 
         /**
-         * fadeout 渐隐
-         * @param {function} fn 完成动画回调
+         * fade 淡入淡出
+         * @param {string} type in|out淡入还是淡出
+         * @param {function} fn 动画完成后的回调
          * @version 1.0
          * 2015-01-11
          */
-        fadeout : function (fn) {
+        fade : function (type, fn) {
             var that = this,
                 el = that.barEl,
                 orOpacity = +( win.getComputedStyle(el, null).opacity ),
+                isDone,
                 doLoop = function () {
-                    orOpacity -= 0.1;
-                    if((+el.style.opacity || orOpacity) > 0) {
-                        hTid = setTimeout(function () {
-                            that._setOpacity(orOpacity);
-                            doLoop();
-                        }, that.options.timer / 10);
+                    var isFadeout = type === 'out',
+                    // 检测动画完成？
+                    _checkDone = function (curOpacity) {
+                        var ret;
+
+                        if(isFadeout) ret = curOpacity < 0;
+                        else ret = curOpacity > 1;
+
+                        return ret;
+                    };
+
+                    orOpacity = isFadeout ? (orOpacity - 0.1) : (orOpacity + 0.1);
+
+                    if( !isDone ) {
+                        // 淡出
+                        if(isFadeout) {
+                            hTid = setTimeout(function () {
+                                that._setOpacity(orOpacity);
+                                doLoop();
+                            }, that.options.timer / 10);
+                        }
+                        // 淡入
+                        else{
+                            sTid = setTimeout(function () {
+                                that._setOpacity(orOpacity);
+                                doLoop();
+                            }, that.options.timer / 10);
+                        }
+                        
                     }
                     else{
-                        clearTimeout(hTid);
-                        that.hide();
+                        if(isFadeout) clearTimeout(hTid),that.hide();
+                        else clearTimeout(sTid), that.show();
+
                         fn && fn.call(that);
                     }
+
+                    isDone = _checkDone((+el.style.opacity || orOpacity));
                 };
 
             doLoop();
         },
 
-        /**
-         * fadein 渐顯
-         * @param {function} fn 完成动画回调
-         * @version 1.0
-         * 2015-01-11
-         */
-        fadein : function (fn) {
-            var that = this,
-                el = that.barEl,
-                orOpacity = +( win.getComputedStyle(el, null).opacity ),
-                doLoop = function () {
-                    orOpacity += 0.1;
-                    if((+el.style.opacity || orOpacity) < 1) {
-                        sTid = setTimeout(function () {
-                            that._setOpacity(orOpacity);
-                            doLoop();
-                        }, that.options.timer / 10);
-                    }
-                    else{
-                        clearTimeout(sTid);
-                        that.show();
-                        fn && fn.call(that);
-                    }
-                };
-
-            doLoop();
-        },
         // 设置透明
         _setOpacity : function (num) {
             var el = this.barEl;
@@ -162,31 +163,18 @@
             if(!/^\s*$/ig.test(href)){
                 // 跳过上轮动画
                 hTid && clearTimeout(hTid), instance.hide();
-                instance.setTxt(decodeURI(href)).fadein();
+                instance.setTxt(decodeURI(href)).fade('in');
             }
 
         });
 
         evProxy('body', 'a', 'mouseout', function () {
-            var that = this,
-                tagName = that.tagName.toLowerCase(),
-                href, aNode;
-
-            // 由 a 本身触发
-            if(tagName === 'a'){
-                href = that.href;
-            }
-            // 由 a 的 childNode 触发，href 需要网上回溯到a
-            else{
-                aNode = win.getClosestEl(that, 'a');
-                href = aNode.href;
-            }
 
             // 考虑没有href属性的情况
-            if(!/^\s*$/ig.test(href)){
+            if(!/^\s*$/ig.test(this.href)){
                 // 跳过上轮动画
                 sTid && clearTimeout(sTid), instance.show();
-                instance.fadeout();
+                instance.fade('out');
             }
         });
     }
