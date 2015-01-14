@@ -15,9 +15,9 @@
         getTagEl = document.getElementsByTagName.bind(document),
         getClassEl = document.getElementsByClassName.bind(document),
         getIdEl = document.getElementById.bind(document),
-        styleTxt = 'position:fixed; display: inline-block; bottom: 0; left: 0; /*opacity: 0;*/z-index: 10000;max-width: 75%; overflow: hidden; height: 16px; line-height: 16px; padding: 0 5px 0 0;border: 1px solid #ccc; border-radius: 0 2px 0 0; white-space:nowrap;font: 12px "Lucida Grande","Lucida Sans Unicode",Helvetica,Arial,Verdana,sans-serif; color: #666; background-color: #f3f2f2;',
+        styleTxt = 'position:fixed; display: inline-block; bottom: 0; left: 0; z-index: 10000;max-width: 75%; overflow: hidden; text-overflow: ellipsis; height: 16px; line-height: 16px; padding: 0 5px 0 0;border: 1px solid #ccc; border-radius: 0 2px 0 0; white-space:nowrap;font: 12px "Lucida Grande","Lucida Sans Unicode",Helvetica,Arial,Verdana,sans-serif; color: #666; background-color: #f3f2f2;',
         options = {
-            timer : 300,
+            timer : 200,
             txt : '此节点由safari插件自动生成'
         },
         instance, links, /*显示(show)动画timeId*/sTid, /*隐藏(hide)动画timeId*/hTid;
@@ -52,7 +52,7 @@
                 reg = /\sf\-dn/ig,
                 el = this.barEl;
 
-            
+            el.style.opacity = 1;            
             if( hasClass(this.barEl, 'f-dn') ){
                 this.barEl.className = klass.replace(reg, '');
             }
@@ -63,6 +63,7 @@
                 klass = this.barEl.className,
                 el = this.barEl;
 
+            el.style.opacity = 0;            
             if(klass.indexOf('f-dn') === -1){
                 that.barEl.className += ' f-dn';
                 that.setTxt(that.options.txt);
@@ -92,11 +93,10 @@
                         hTid = setTimeout(function () {
                             that._setOpacity(orOpacity);
                             doLoop();
-                        }, 20);
+                        }, that.options.timer / 10);
                     }
                     else{
                         clearTimeout(hTid);
-                        el.style.opacity = 0;
                         that.hide();
                         fn && fn.call(that);
                     }
@@ -121,11 +121,10 @@
                         sTid = setTimeout(function () {
                             that._setOpacity(orOpacity);
                             doLoop();
-                        }, 20);
+                        }, that.options.timer / 10);
                     }
                     else{
                         clearTimeout(sTid);
-                        el.style.opacity = 1;
                         that.show();
                         fn && fn.call(that);
                     }
@@ -149,8 +148,6 @@
                 tagName = that.tagName.toLowerCase(),
                 href, aNode;
 
-            // 跳过上轮动画
-            hTid && clearTimeout(hTid), instance.hide();
             // 由 a 本身触发
             if(tagName === 'a'){
                 href = that.href;
@@ -163,14 +160,34 @@
 
             // 考虑没有href属性的情况
             if(!/^\s*$/ig.test(href)){
+                // 跳过上轮动画
+                hTid && clearTimeout(hTid), instance.hide();
                 instance.setTxt(decodeURI(href)).fadein();
             }
+
         });
 
         evProxy('body', 'a', 'mouseout', function () {
-            // 跳过上轮动画
-            sTid && clearTimeout(sTid), instance.show();
-            instance.fadeout();
+            var that = this,
+                tagName = that.tagName.toLowerCase(),
+                href, aNode;
+
+            // 由 a 本身触发
+            if(tagName === 'a'){
+                href = that.href;
+            }
+            // 由 a 的 childNode 触发，href 需要网上回溯到a
+            else{
+                aNode = win.getClosestEl(that, 'a');
+                href = aNode.href;
+            }
+
+            // 考虑没有href属性的情况
+            if(!/^\s*$/ig.test(href)){
+                // 跳过上轮动画
+                sTid && clearTimeout(sTid), instance.show();
+                instance.fadeout();
+            }
         });
     }
 
@@ -295,7 +312,8 @@
                 
                 // reTar 只要不是 tar 的childNode 就触发
                 // reTar 是否是 a 或者 a 的 childNode
-                if ( !isDescendantOrSelf(reTar, tar) ) {
+                // 判断 reTar 是否存在，当鼠标从a元素移动到窗口外是 reTar === null
+                if ( reTar !== null && !isDescendantOrSelf(reTar, tar) ) {
                     fn.call(tar, data);
                 }
             }
