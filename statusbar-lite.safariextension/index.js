@@ -19,7 +19,8 @@
         options = {
             timer : 300,
             txt : '此节点由safari插件自动生成'
-        },instance,links;
+        },
+        instance, links, /*显示(show)动画timeId*/sTid, /*隐藏(hide)动画timeId*/hTid;
 
     function Constructor (options) {
         this.options = options;
@@ -36,7 +37,6 @@
             styleEl.setAttribute('type', 'text/css');
             styleEl.appendChild(cssTxt);
             styleEl.appendChild(createTxt('.f-dn{display:none;}'));
-            // styleEl.appendChild(createTxt('a *{pointer-events: none;}'));
             document.head.appendChild(styleEl);
 
             bar.setAttribute('class', datakey + ' f-dn');
@@ -55,7 +55,6 @@
             
             if( hasClass(this.barEl, 'f-dn') ){
                 this.barEl.className = klass.replace(reg, '');
-                // this.opacityAnimate(el, 100, 75);
             }
         },
 
@@ -64,12 +63,10 @@
                 klass = this.barEl.className,
                 el = this.barEl;
 
-            // this.opacityAnimate(el, 0, 75, function () {
-                if(klass.indexOf('f-dn') === -1){
-                    that.barEl.className += ' f-dn';
-                    that.setTxt(that.options.txt);
-                }
-            // });
+            if(klass.indexOf('f-dn') === -1){
+                that.barEl.className += ' f-dn';
+                that.setTxt(that.options.txt);
+            }
         },
 
         setTxt : function (str) {
@@ -80,46 +77,68 @@
         },
 
         /**
-         * 透明度渐变
-         * @param {object} el 元素 dom
-         * @param {number} num 目标透明度 0 — 100
-         * @param {number} time 动画时间长度 单位ms
+         * fadeout 渐隐
          * @param {function} fn 完成动画回调
          * @version 1.0
          * 2015-01-11
          */
-        /*opacityAnimate : function (el, num, time, fn) {
-            var computedStyle = win.getComputedStyle(el, null),
-                orOpacity = +computedStyle.opacity * 100,
-                curOPacity, tid, _checkDone, ts;
+        fadeout : function (fn) {
+            var that = this,
+                el = that.barEl,
+                orOpacity = +( win.getComputedStyle(el, null).opacity ),
+                doLoop = function () {
+                    orOpacity -= 0.1;
+                    if((+el.style.opacity || orOpacity) > 0) {
+                        hTid = setTimeout(function () {
+                            that._setOpacity(orOpacity);
+                            doLoop();
+                        }, 20);
+                    }
+                    else{
+                        clearTimeout(hTid);
+                        el.style.opacity = 0;
+                        that.hide();
+                        fn && fn.call(that);
+                    }
+                };
 
-            if(getType(num) !== 'number' || getType(time) !== 'number') return;
-            if(orOpacity === num) return;
-            if(num > 100) num = 100;
-            if(num < 0) num = 0;
+            doLoop();
+        },
 
-            el.style.opacity = Math.floor(orOpacity) / 100;
-            // 事件片长度
-            ts = Math.abs(time / (orOpacity - num));
+        /**
+         * fadein 渐顯
+         * @param {function} fn 完成动画回调
+         * @version 1.0
+         * 2015-01-11
+         */
+        fadein : function (fn) {
+            var that = this,
+                el = that.barEl,
+                orOpacity = +( win.getComputedStyle(el, null).opacity ),
+                doLoop = function () {
+                    orOpacity += 0.1;
+                    if((+el.style.opacity || orOpacity) < 1) {
+                        sTid = setTimeout(function () {
+                            that._setOpacity(orOpacity);
+                            doLoop();
+                        }, 20);
+                    }
+                    else{
+                        clearTimeout(sTid);
+                        el.style.opacity = 1;
+                        that.show();
+                        fn && fn.call(that);
+                    }
+                };
 
-            _checkDone = function () {
-                curOPacity = el.style.opacity * 100;
+            doLoop();
+        },
+        // 设置透明
+        _setOpacity : function (num) {
+            var el = this.barEl;
 
-                if(Math.floor(curOPacity) !== num){
-                    curOPacity = (num > orOpacity) ? (curOPacity + 1) : (curOPacity - 1);
-                    el.style.opacity = parseInt(curOPacity) / 100;
-
-                    tid = setTimeout(_checkDone, ts);
-                }
-                else{
-                    clearTimeout(tid);
-                    fn && fn.call(win);
-                }
-
-            }
-
-            _checkDone();
-        }*/
+            el.style.opacity = num;
+        }
     };
 
     if(win.top === win) {
@@ -130,6 +149,8 @@
                 tagName = that.tagName.toLowerCase(),
                 href, aNode;
 
+            // 跳过上轮动画
+            hTid && clearTimeout(hTid), instance.hide();
             // 由 a 本身触发
             if(tagName === 'a'){
                 href = that.href;
@@ -142,12 +163,14 @@
 
             // 考虑没有href属性的情况
             if(!/^\s*$/ig.test(href)){
-                instance.setTxt(decodeURI(href)).show(); 
+                instance.setTxt(decodeURI(href)).fadein();
             }
         });
 
         evProxy('body', 'a', 'mouseout', function () {
-            instance.hide();
+            // 跳过上轮动画
+            sTid && clearTimeout(sTid), instance.show();
+            instance.fadeout();
         });
     }
 
@@ -292,9 +315,6 @@
         function isDescendantOrSelf(son, father) {
             var ret = false;
 
-            /*console.log('mouseout进入: ',son);
-            console.log('mouseout离开: ',father);
-            console.log('----------');*/
             if(son === father) {
                 ret = true;
             }
