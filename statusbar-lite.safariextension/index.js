@@ -54,13 +54,13 @@
 
         show : function () {
             var klass = this.barEl.className,
-                reg = /\sf\-dn/ig;
+                reg = /(^|\s)f\-dn(\s|$)/ig;
 
             if( hasClass(this.barEl, 'f-dn') ){
                 this.barEl.className = klass.replace(reg, '');
             }
         },
-
+        
         hide : function () {
             var that = this,
                 klass = this.barEl.className,
@@ -413,9 +413,8 @@
             reg, ret;
 
         klass = klass.replace('-', '\\-');
-        // TODO: 正则考虑不全面
         // reg = /\sf\-dn/ig;
-        reg = new RegExp('\\s' + klass, 'ig');
+        reg = new RegExp('(\\s|^)' + klass + '(\\s|$)', 'ig');
         ret = reg.test(className);
         return ret;
     }
