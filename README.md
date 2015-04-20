@@ -6,7 +6,8 @@ Chrome 给人的感觉虽然越来越重了，但是它的很多细节设计都�
 
 >让Safari像Chrome一样显示当前鼠标指向的链接地址
 
-下载地址请戳[这里](https://extensions.apple.com/details/?id=com.zhaomiing.statusbar-lite-CA9Y298CEX)(需翻X墙)
+Safari 直接安装请戳[这里](https://extensions.apple.com/details/?id=com.zhaomiing.statusbar-lite-CA9Y298CEX)(需翻X墙)   
+或者下载地址 [百度网盘](http://pan.baidu.com/s/1hqmtJWo)
 
 最后是用 Sketch 画得一个图标。
 <figure>
