@@ -11,5 +11,5 @@ Safari 直接安装请戳[这里](https://extensions.apple.com/details/?id=com.z
 
 最后是用 Sketch 画得一个图标。
 <figure>
-<a href="#"><img src="http://www.prototypo.me/images/Icon.png"></a>
+<a href="#"><img src="https://zhaomiing.github.io/images/Icon.png"></a>
 </figure>
